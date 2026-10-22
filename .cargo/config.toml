@@ -1,0 +1,29 @@
+[alias]
+# Local development shortcuts. They intentionally omit --locked so Cargo may update
+# Cargo.lock during development; commit the lockfile after dependency changes.
+# The local test aliases also omit RUSTFLAGS; CI's test/build jobs set -D warnings.
+# 本地开发快捷命令。刻意不加 --locked，允许开发期间更新 Cargo.lock；依赖变更后请提交锁文件。
+# 本地测试别名也不设置 RUSTFLAGS；CI 的 test/build job 会设置 -D warnings。
+run-service = "run -p example-service"
+build-all = "build --workspace"
+check-all = "check --workspace --all-targets"
+fmt-all = "fmt --all"
+lint-all = "clippy --workspace --all-targets -- -D warnings"
+# `cargo test --all-targets` excludes doctests, hence the separate doctest alias.
+# `cargo test --all-targets` 不包含 doctest，因此单独提供 doctest 别名。
+test-all = "test --workspace --all-targets"
+doctest-all = "test --workspace --doc"
+doc-all = "doc --workspace --no-deps --document-private-items"
+
+# CI commands. Dependency-resolving commands use --locked to guarantee they match
+# Cargo.lock exactly. cargo fmt does not accept --locked and is intentionally excluded.
+# `ci-doctest` is separate because `--all-targets` does not run doctests.
+# CI 命令。涉及依赖解析的命令使用 --locked，确保与 Cargo.lock 完全一致；
+# cargo fmt 不接受 --locked，因此刻意不加。`ci-doctest` 单独存在，因为
+# `--all-targets` 不运行 doctest。
+ci-fmt = "fmt --all -- --check"
+ci-lint = "clippy --workspace --all-targets --locked -- -D warnings"
+ci-test = "test --workspace --all-targets --locked"
+ci-doctest = "test --workspace --doc --locked"
+ci-doc = "doc --workspace --no-deps --document-private-items --locked"
+ci-build = "build --workspace --release --locked"

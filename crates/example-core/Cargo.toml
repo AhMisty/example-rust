@@ -1,0 +1,10 @@
+[package]
+name = "example-core"
+description = "Shared greeting primitives for the example-rust workspace."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

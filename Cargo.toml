@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+# Supported compiler version. It equals the toolchain pinned by rust-toolchain.toml: the team builds with exactly this version, and older compilers are not supported. The field also drives resolver 3 MSRV-aware dependency selection.
+# 支持的编译器版本。与 rust-toolchain.toml 固定的工具链一致：团队只使用该版本构建，不承诺支持更老的编译器；此字段还用于 resolver 3 的 MSRV 选择。
+rust-version = "1.99.1"
+# Team template: prevent accidental `cargo publish`. A crate that needs to be published later can override this in its own manifest.
+# 团队模板，禁止误执行 cargo publish；将来某个 crate 需要发布时，可在其清单中覆盖。
+publish = false
+
+[workspace.dependencies]
+# Internal crates are declared once so members share the same path source.
+# 内部 crate 在此统一声明，成员共享同一路径来源。
+example-core = { path = "crates/example-core" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unused_qualifications = "warn"
+missing_debug_implementations = "warn"
+
+# Strict lint baseline for a team template. Enable clippy groups as a whole, then
+# relax individual lints narrowly in `[workspace.lints.clippy]` or at the item level;
+# `clippy.toml` only configures lint behavior such as test exemptions. Do not disable
+# a whole group to silence a single finding.
+# 团队模板的严格 lint 基线。以组为单位启用 clippy，再在 `[workspace.lints.clippy]`
+# 或具体条目上做窄范围豁免；`clippy.toml` 只配置 lint 行为（如测试豁免）。
+# 不要为了单个告警而关闭整个 lint 组。
+[workspace.lints.clippy]
+all = "warn"
+pedantic = { level = "warn", priority = -1 }
+panic = "warn"
+unimplemented = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+todo = "warn"
+dbg_macro = "warn"
+# Require a reason on every `#[allow(...)]` so future exceptions stay reviewable.
+# 每个 `#[allow(...)]` 必须写明理由，便于后续审查。
+allow_attributes_without_reason = "warn"
+
+# Rustdoc-specific lints. CI upgrades them to errors with `RUSTDOCFLAGS=-D warnings`.
+# rustdoc 专项 lint；CI 通过 `RUSTDOCFLAGS=-D warnings` 将其升级为错误。
+[workspace.lints.rustdoc]
+all = "warn"
+
+# Release profile: optimize for runtime performance first. Fat LTO merges code across
+# crates; a single codegen unit further trades compile parallelism for optimization.
+# panic=abort removes unwinding support, so catch_unwind is unavailable in release builds.
+# strip removes symbol tables; delete that line if release backtraces need function names.
+# 发布构建：以运行时性能为第一目标。fat LTO 跨 crate 合并优化；单 codegen unit
+# 进一步以编译并行度换取优化。panic=abort 去掉 unwind 支持，release 构建中
+# catch_unwind 不可用；strip 去掉符号表，若 release 回溯需要函数名，请删除该行。
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

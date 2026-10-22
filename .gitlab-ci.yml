@@ -1,0 +1,73 @@
+# CI covers Linux only; Windows compatibility is verified locally.
+# CI 仅覆盖 Linux；Windows 兼容性由本地验证。
+stages:
+  - check
+  - build
+
+# Avoid duplicate branch and merge request pipelines for the same branch. Tag pipelines
+# are intentionally not configured: `build` is a compile check, not a release job.
+# 避免同一分支同时产生分支流水线和 MR 流水线。刻意不配置 tag 流水线：
+# `build` 仅做编译检查，不是发布 job。
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/.cargo-home
+  CARGO_TERM_COLOR: always
+
+default:
+  # Keep this tag in sync with rust-toolchain.toml.
+  # 与 rust-toolchain.toml 保持一致。
+  image: rust:1.99.1
+  interruptible: true
+  cache:
+    key:
+      files:
+        - Cargo.lock
+        - rust-toolchain.toml
+    paths:
+      - target/
+      - .cargo-home/
+
+fmt:
+  stage: check
+  script:
+    - cargo ci-fmt
+
+clippy:
+  stage: check
+  script:
+    - cargo ci-lint
+
+test:
+  stage: check
+  # Compiler and rustdoc warnings are errors for workspace code. Keep these scoped
+  # to the jobs that need them so fmt/clippy do not carry a different Cargo fingerprint.
+  # 将编译器与 rustdoc 告警视为错误；仅作用于需要的 job，避免 fmt/clippy
+  # 携带不同的 Cargo 指纹。
+  variables:
+    RUSTFLAGS: "-D warnings"
+    RUSTDOCFLAGS: "-D warnings"
+  script:
+    - cargo ci-test
+    - cargo ci-doctest
+
+doc:
+  stage: check
+  variables:
+    RUSTDOCFLAGS: "-D warnings"
+  script:
+    - cargo ci-doc
+
+build:
+  stage: build
+  # Compile verification only; this job does not produce a deliverable artifact.
+  # 仅做编译验证；此 job 不产出交付物。
+  variables:
+    RUSTFLAGS: "-D warnings"
+  script:
+    - cargo ci-build

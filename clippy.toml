@@ -1,0 +1,4 @@
+# Allow unwrap/expect in tests: test failures should panic directly. Production code remains constrained by CI's -D warnings.
+# 测试代码允许 unwrap/expect：测试失败应直接 panic；生产代码仍受 CI 的 -D warnings 约束。
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

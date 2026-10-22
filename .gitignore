@@ -1,0 +1,6 @@
+/target
+/.cargo-home
+# Local environment files may contain secrets.
+# 本地环境文件可能包含密钥。
+.env
+.env.*
